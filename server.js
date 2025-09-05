@@ -18,12 +18,12 @@ app.use(cors({
 
 // Routes
 app.get("/", (req, res) => {
-  res.send("Hii from server 🚀");
+  res.send("Hii from server ");
 });
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`✅ Server started at ${PORT}`);
+  console.log(` Server started at ${PORT}`);
 });
 
 app.listen(8000,() => {
