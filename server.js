@@ -18,7 +18,7 @@ app.use(cors({
 
 // Routes
 app.get("/", (req, res) => {
-  res.send("Hii from server ");
+  res.send("Hii from server 1 ");
 });
 
 // Start server
