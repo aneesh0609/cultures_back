@@ -4,6 +4,7 @@ import cors from "cors";
 import 'dotenv/config';
 
 import { initModels } from "./config/bind.js";
+import Route from "./routes/authRoute.js";
 
 
 
@@ -25,6 +26,8 @@ await initModels();
 app.get("/", (req, res) => {
   res.send("Hii from server 1 ");
 });
+
+app.use('/api/auth' , Route);
 
 // Start server
 app.listen(PORT, () => {
