@@ -68,3 +68,55 @@ export const signup = async (req, res) => {
     });
   }
 };
+
+
+export const signin = async (req,res) => {
+
+  const{email,password} = req.body ;
+
+  try {
+    
+    if(!email || !password)
+    {
+      return res.status(400).json({success: false , message: "All fields Required"})
+    }
+
+    const user = await User.findOne({email}) ;
+
+    if(!user)
+    {
+       return res.status(400).json({success: false , message: "Invalid email or password"});
+    }
+
+    const comparePassword = await bcrypt.compare(password , user.password) ;
+    
+    if(!comparePassword)
+    {
+      return res.status(400).json({success: false , message : "Invalid email or password" });
+    }
+
+  const token = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    });
+
+
+    res.json({success: true , message : "User Login Successfully" });
+ 
+
+  } catch (error) {
+    console.error("Login Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Login failed. Internal server error."
+    });
+  }
+}
