@@ -1,9 +1,11 @@
 import express from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
-import dotenv from "dotenv";
+import 'dotenv/config';
+import connectDb1 from "./database/database.js";
+import connectDb2 from "./database/database2.js";
 
-dotenv.config();
+
 
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -16,6 +18,9 @@ app.use(cors({
   credentials: true
 }));
 
+connectDb1();
+connectDb2();
+
 // Routes
 app.get("/", (req, res) => {
   res.send("Hii from server 1 ");
@@ -26,6 +31,4 @@ app.listen(PORT, () => {
   console.log(` Server started at ${PORT}`);
 });
 
-app.listen(8000,() => {
-  console.log()
-})
+
