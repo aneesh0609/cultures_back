@@ -2,8 +2,8 @@ import express from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import 'dotenv/config';
-import connectDb1 from "./database/database.js";
-import connectDb2 from "./database/database2.js";
+
+import { initModels } from "./config/bind.js";
 
 
 
@@ -18,8 +18,8 @@ app.use(cors({
   credentials: true
 }));
 
-connectDb1();
-connectDb2();
+// init DB + models
+await initModels();
 
 // Routes
 app.get("/", (req, res) => {
