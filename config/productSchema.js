@@ -38,12 +38,12 @@ const productSchema = new mongoose.Schema(
 
     sizes: {
       type: [String], //  ["S", "M", "L", "XL"]
-      default: [],
+      default: ["M"],
     },
 
     colors: {
       type: [String], // : ["red", "black", "white"]
-      default: [],
+      default: ["black"],
     },
 
     stock: {
@@ -61,6 +61,10 @@ const productSchema = new mongoose.Schema(
       average: { type: Number, default: 0 },
       count: { type: Number, default: 0 },
     },
+    createdAt: {
+    type: Date,
+    default: Date.now,
+  }
   },
   { timestamps: true } 
 );

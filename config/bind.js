@@ -1,8 +1,9 @@
 import connectDb1 from "../database/database.js";
 import connectDb2 from "../database/database2.js";
 import userSchema from "./userSchema.js";
+import productSchema from "./productSchema.js";
 
-let User; // model stored here
+let User , Product ;
 
 const initModels = async () => {
   const db1 = await connectDb1(); // main mongoose connection
@@ -10,8 +11,9 @@ const initModels = async () => {
 
   // ✅ Attach schema to DB1 only
   User = db1.model("User", userSchema);
+  Product = db1.model("Product", productSchema);
 
-  return { db1, db2, User };
+  return { db1, db2, User , Product };
 };
 
-export { initModels, User };
+export { initModels, User , Product};
