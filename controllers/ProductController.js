@@ -53,7 +53,6 @@ export const updateProducts = async (req, res) => {
       return res.status(400).json({ success: false, message: "Product ID and updates are required" });
     }
 
-    // ✅ Await the update and return the updated product
     const updatedProduct = await Product.findByIdAndUpdate(productId, updates, { new: true });
 
     if (!updatedProduct) {
@@ -67,3 +66,31 @@ export const updateProducts = async (req, res) => {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
+
+
+
+export const deleteProduct  = async (req,res) => 
+{
+    const {productId} = req.body ;
+
+   try {
+
+        if(!productId )
+        {
+          return res.status(400).json({success: false , message : "product id not received"})
+        }
+
+        const deletePr = await Product.findByIdAndDelete(productId);
+
+        if(!deletePr)
+        {
+          return res.json({success: false , message : "product not found"}) ;
+        }
+
+        res.status(200).json({success: true , message: "product deleted successfully"});
+    
+   } catch (error) {
+    console.error("delete failed:", error);
+    return res.status(500).json({ success: false, message: error.message });
+   }
+}
