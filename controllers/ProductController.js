@@ -40,3 +40,30 @@ export const getAllProducts = async (req,res) =>
       }
   
 }
+
+
+
+
+export const updateProducts = async (req, res) => {
+
+  try {
+    const { productId, updates } = req.body;
+
+    if (!productId || !updates) {
+      return res.status(400).json({ success: false, message: "Product ID and updates are required" });
+    }
+
+    // ✅ Await the update and return the updated product
+    const updatedProduct = await Product.findByIdAndUpdate(productId, updates, { new: true });
+
+    if (!updatedProduct) {
+      return res.status(404).json({ success: false, message: "Product not found" });
+    }
+
+    return res.json({ success: true, updatedProduct });
+
+  } catch (error) {
+    console.error("Update failed:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
