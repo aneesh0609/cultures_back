@@ -13,7 +13,6 @@ export const createProduct = async (req,res) => {
     return res.status(400).json({success: false , message: "All fields Required"});
   }
     
-      console.log(req.body);
 
     const product =  new Product({name,description,price,category,stock,images}) ;
 
@@ -26,4 +25,18 @@ export const createProduct = async (req,res) => {
     return res.status(500).json({success: false , message : "PR Internal Server Error"})
   }
 
+}
+
+
+export const getAllProducts = async (req,res) => 
+{
+      try {
+        
+      const product = await Product.find() ;
+      return res.status(200).json({success: true , product})
+
+      } catch (error) {
+           return res.status(500).json({success: false , message : "GP Internal Server Error"}) ;
+      }
+  
 }
