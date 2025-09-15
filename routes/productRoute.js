@@ -1,13 +1,14 @@
 import express from 'express' 
 import { createProduct, deleteProduct, getAllProducts, updateProducts } from '../controllers/ProductController.js';
+import { adminOnly, protect } from '../middleware/authMiddleware.js';
 
 
 const productRoute = express.Router();
 
 
-productRoute.post('/create-product' , createProduct) ;
-productRoute.get('/getAll-products' , getAllProducts);
-productRoute.put('/update-products' , updateProducts);
-productRoute.delete('/delete-products' , deleteProduct);
+productRoute.post('/create-product' , protect , adminOnly , createProduct) ;
+productRoute.get('/getAll-products' , protect , adminOnly , getAllProducts);
+productRoute.put('/update-products' , protect , adminOnly , updateProducts);
+productRoute.delete('/delete-products' , protect , adminOnly , deleteProduct);
 
 export default productRoute ;
