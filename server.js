@@ -6,6 +6,7 @@ import 'dotenv/config';
 import { initModels } from "./config/bind.js";
 import Route from "./routes/authRoute.js";
 import productRoute from "./routes/productRoute.js";
+import userRoute from "./routes/userRoute.js";
 
 
 
@@ -30,6 +31,7 @@ app.get("/", (req, res) => {
 
 app.use('/api/auth' , Route);
 app.use('/api/product' , productRoute);
+app.use('/api/user' , userRoute);
 
 // Start server
 app.listen(PORT, () => {
