@@ -52,7 +52,12 @@ export const getCartItems = async(req,res) => {
             return res.status(400).json({success: false , message : "please login again"});
           }
 
-          const cart = await Cart.findOne({ userId }).populate({  path: "items.productId", model: Product });
+          const cart = await Cart.findOne({ userId: req.user.id })
+      .populate({
+        path: "items.productId", 
+        select: "name price images sizes colors stock", 
+        model : Product
+      })
 
           if(!cart)
           {
