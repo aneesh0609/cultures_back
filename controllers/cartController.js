@@ -1,0 +1,51 @@
+import { Cart ,Product , User } from "../config/bind.js"; 
+
+
+export const addToCart = async (req, res) => {
+  const { productId, quantity } = req.body;
+  const userId = req.user.id; 
+
+  try {
+ 
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({ success: false, message: "Product not found" });
+    }
+
+   
+    let cart = await Cart.findOne({ userId });
+
+    if (!cart) {
+      
+      cart = await Cart.create({
+        userId,
+        items: [{ productId, quantity }],
+      });
+    } else {
+     
+      const existingItem = cart.items.find(
+        (item) => item.productId.toString() === productId
+      );
+
+      if (existingItem) {
+        existingItem.quantity += quantity;
+      } else {
+        cart.items.push({ productId, quantity });
+      }
+    }
+
+    cart.updatedAt = Date.now();
+    await cart.save();
+
+    res.status(200).json({ success: true, message: "Item added to cart", cart });
+  } catch (error) {
+    console.error("Add to Cart Error:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};

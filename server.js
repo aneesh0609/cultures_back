@@ -7,6 +7,7 @@ import { initModels } from "./config/bind.js";
 import Route from "./routes/authRoute.js";
 import productRoute from "./routes/productRoute.js";
 import userRoute from "./routes/userRoute.js";
+import cartRoute from "./routes/cartRoutes.js";
 
 
 
@@ -32,6 +33,7 @@ app.get("/", (req, res) => {
 app.use('/api/auth' , Route);
 app.use('/api/product' , productRoute);
 app.use('/api/user' , userRoute);
+app.use('/api/cart' , cartRoute);
 
 // Start server
 app.listen(PORT, () => {
