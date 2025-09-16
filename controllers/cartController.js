@@ -130,18 +130,18 @@ export const removeFromCart = async (req, res) => {
   }
 };
 
-// // 🟢 Clear Cart
-// export const clearCart = async (req, res) => {
-//   const userId = req.user?.id;
 
-//   try {
-//     if (!userId) return res.status(400).json({ success: false, message: "Please login again" });
+export const clearCart = async (req, res) => {
+  const userId = req.user?.id;
 
-//     await Cart.findOneAndUpdate({ userId }, { $set: { items: [] } });
+  try {
+    if (!userId) return res.status(400).json({ success: false, message: "Please login again" });
 
-//     res.status(200).json({ success: true, message: "Cart cleared", cart: { items: [] } });
-//   } catch (error) {
-//     console.error("Clear Cart Error:", error);
-//     res.status(500).json({ success: false, message: "Internal server error" });
-//   }
-// };
+    await Cart.findOneAndUpdate({ userId }, { $set: { items: [] } });
+
+    res.status(200).json({ success: true, message: "Cart cleared", cart: { items: [] } });
+  } catch (error) {
+    console.error("Clear Cart Error:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
