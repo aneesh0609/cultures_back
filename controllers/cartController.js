@@ -105,31 +105,30 @@ export const updateCartQuantity = async (req, res) => {
   }
 };
 
-// // 🟢 Remove Item from Cart
-// export const removeFromCart = async (req, res) => {
-//   const userId = req.user?.id;
-//   const { productId } = req.params;
 
-//   try {
-//     if (!userId) return res.status(400).json({ success: false, message: "Please login again" });
+export const removeFromCart = async (req, res) => {
+  const userId = req.user?.id;
+  const { productId } = req.body;
 
-//     const cart = await Cart.findOne({ userId });
-//     if (!cart) return res.status(404).json({ success: false, message: "Cart not found" });
+  try {
 
-//     cart.items = cart.items.filter(item => item.productId.toString() !== productId);
-//     await cart.save();
+    const cart = await Cart.findOne({ userId });
+    if (!cart) return res.status(404).json({ success: false, message: "Cart not found" });
 
-//     const populatedCart = await cart.populate({
-//       path: "items.productId",
-//       model: Product,
-//     });
+    cart.items = cart.items.filter(item => item.productId.toString() !== productId);
+    await cart.save();
 
-//     res.status(200).json({ success: true, message: "Item removed from cart", cart: populatedCart });
-//   } catch (error) {
-//     console.error("Remove from Cart Error:", error);
-//     res.status(500).json({ success: false, message: "Internal server error" });
-//   }
-// };
+    const populatedCart = await cart.populate({
+      path: "items.productId",
+      model: Product,
+    });
+
+    res.status(200).json({ success: true, message: "Item removed from cart", cart: populatedCart });
+  } catch (error) {
+    console.error("Remove from Cart Error:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
 
 // // 🟢 Clear Cart
 // export const clearCart = async (req, res) => {
