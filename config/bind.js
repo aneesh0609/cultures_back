@@ -2,8 +2,9 @@ import connectDb1 from "../database/database.js";
 import connectDb2 from "../database/database2.js";
 import userSchema from "./userSchema.js";
 import productSchema from "./productSchema.js";
+import cartSchema from "./cartSchema.js";
 
-let User , Product ;
+let User , Product , Cart ;
 
 const initModels = async () => {
   const db1 = await connectDb1(); // main mongoose connection
@@ -12,8 +13,8 @@ const initModels = async () => {
   // ✅ Attach schema to DB1 only
   User = db1.model("User", userSchema);
   Product = db1.model("Product", productSchema);
-
-  return { db1, db2, User , Product };
+  Cart = db2.model('Cart' , cartSchema);
+  return { db1, db2, User , Product , Cart };
 };
 
-export { initModels, User , Product};
+export { initModels, User , Product , Cart};
