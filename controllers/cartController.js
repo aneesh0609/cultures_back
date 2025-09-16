@@ -49,3 +49,34 @@ export const addToCart = async (req, res) => {
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
+
+
+
+
+export const getCartItems = async(req,res) => {
+
+  const userId = req.user.id ;
+
+  try {
+          if(!userId)
+          {
+            return res.status(400).json({success: false , message : "please login again"});
+          }
+
+          const cart = await Cart.findOne({ userId }).populate({  path: "items.productId", model: Product });
+
+          if(!cart)
+          {
+            return res.status(200).json({success: true , cart : { items : [] } }) ;
+          }
+
+         return  res.status(200).json({success: true , cart })
+
+
+
+  } catch (error) {
+        console.error("Get Cart Error:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+
+}
