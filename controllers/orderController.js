@@ -132,41 +132,41 @@ export const getOrderById = async (req, res) => {
 };
 
 
-// export const cancelOrder = async (req, res) => {
-//   const userId = req.user?.id;
-//   const { id } = req.params;
+export const cancelOrder = async (req, res) => {
+  const userId = req.user?.id;
+  const { id } = req.params;
 
-//   try {
-//     const order = await Order.findOne({ _id: id, userId });
+  try {
+    const order = await Order.findOne({ _id: id, userId });
 
-//     if (!order) {
-//       return res.status(404).json({ success: false, message: "Order not found" });
-//     }
+    if (!order) {
+      return res.status(404).json({ success: false, message: "Order not found" });
+    }
 
-//     if (order.status !== "pending") {
-//       return res.status(400).json({
-//         success: false,
-//         message: "Order cannot be cancelled once processed/shipped",
-//       });
-//     }
+    if (order.status !== "pending") {
+      return res.status(400).json({
+        success: false,
+        message: "Order cannot be cancelled once processed/shipped",
+      });
+    }
 
-//     order.status = "cancelled";
+    order.status = "cancelled";
 
-//     // Optional: if paymentStatus === "paid", trigger refund logic here
-//     if (order.paymentStatus === "paid") {
-//       // TODO: Call payment gateway API to initiate refund
-//       order.paymentStatus = "refunded";
-//     }
+    // Optional: if paymentStatus === "paid", trigger refund logic here
+    if (order.paymentStatus === "paid") {
+      // TODO: Call payment gateway API to initiate refund
+      order.paymentStatus = "refunded";
+    }
 
-//     await order.save();
+    await order.save();
 
-//     return res.status(200).json({
-//       success: true,
-//       message: "Order cancelled successfully",
-//       order,
-//     });
-//   } catch (error) {
-//     console.error("Cancel Order Error:", error);
-//     res.status(500).json({ success: false, message: "Internal server error" });
-//   }
-// };
+    return res.status(200).json({
+      success: true,
+      message: "Order cancelled successfully",
+      order,
+    });
+  } catch (error) {
+    console.error("Cancel Order Error:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
