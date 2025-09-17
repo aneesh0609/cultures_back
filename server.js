@@ -8,6 +8,7 @@ import Route from "./routes/authRoute.js";
 import productRoute from "./routes/productRoute.js";
 import userRoute from "./routes/userRoute.js";
 import cartRoute from "./routes/cartRoutes.js";
+import orderRoute from "./routes/orderRoutes.js";
 
 
 
@@ -34,6 +35,7 @@ app.use('/api/auth' , Route);
 app.use('/api/product' , productRoute);
 app.use('/api/user' , userRoute);
 app.use('/api/cart' , cartRoute);
+app.use('/api/order' , orderRoute);
 
 // Start server
 app.listen(PORT, () => {
