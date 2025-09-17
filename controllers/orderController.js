@@ -81,3 +81,92 @@ export const createOrder = async (req, res) => {
     res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
+
+
+
+export const getOrders = async (req, res) => {
+  const userId = req.user?.id;
+
+  try {
+    const orders = await Order.find({ userId })
+      .populate({
+        path: "items.productId",
+        model: Product,
+        select: "name price",
+      })
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      count: orders.length,
+      orders,
+    });
+  } catch (error) {
+    console.error("Get Orders Error:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+
+
+// export const getOrderById = async (req, res) => {
+//   const userId = req.user?.id;
+//   const { id } = req.params;
+
+//   try {
+//     const order = await Order.findOne({ _id: id, userId })
+//       .populate({
+//         path: "items.productId",
+//         model: Product,
+//         select: "name price",
+//       });
+
+//     if (!order) {
+//       return res.status(404).json({ success: false, message: "Order not found" });
+//     }
+
+//     return res.status(200).json({ success: true, order });
+//   } catch (error) {
+//     console.error("Get Order By ID Error:", error);
+//     res.status(500).json({ success: false, message: "Internal server error" });
+//   }
+// };
+
+
+// export const cancelOrder = async (req, res) => {
+//   const userId = req.user?.id;
+//   const { id } = req.params;
+
+//   try {
+//     const order = await Order.findOne({ _id: id, userId });
+
+//     if (!order) {
+//       return res.status(404).json({ success: false, message: "Order not found" });
+//     }
+
+//     if (order.status !== "pending") {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Order cannot be cancelled once processed/shipped",
+//       });
+//     }
+
+//     order.status = "cancelled";
+
+//     // Optional: if paymentStatus === "paid", trigger refund logic here
+//     if (order.paymentStatus === "paid") {
+//       // TODO: Call payment gateway API to initiate refund
+//       order.paymentStatus = "refunded";
+//     }
+
+//     await order.save();
+
+//     return res.status(200).json({
+//       success: true,
+//       message: "Order cancelled successfully",
+//       order,
+//     });
+//   } catch (error) {
+//     console.error("Cancel Order Error:", error);
+//     res.status(500).json({ success: false, message: "Internal server error" });
+//   }
+// };
