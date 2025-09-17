@@ -31,6 +31,9 @@ const orderSchema = new mongoose.Schema(
       required: true,
     },
     items: [orderItemSchema],
+    subtotal: { type: Number, required: true },
+    gstAmount: { type: Number, required: true },
+    shippingCharges: { type: Number, required: true },
     totalAmount: { type: Number, required: true },
     shippingAddress: { type: shippingAddressSchema, required: true },
     status: {
