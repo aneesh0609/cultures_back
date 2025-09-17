@@ -5,7 +5,7 @@ export const createOrder = async (req, res) => {
   const { shippingAddress } = req.body;
 
   try {
-
+   
     if (
       !shippingAddress?.fullName ||
       !shippingAddress?.phone ||
@@ -21,7 +21,7 @@ export const createOrder = async (req, res) => {
       });
     }
 
-    // Get user cart with product details
+    //  Get user cart with product details
 
     const cart = await Cart.findOne({ userId }).populate({
       path: "items.productId",
@@ -45,44 +45,36 @@ export const createOrder = async (req, res) => {
       };
     });
 
-    //  GST Calculation (5%)
+    subtotal = Number(subtotal.toFixed(2));
 
-    const gstAmount = subtotal * 0.05;
+    //  GST & Shipping Calculation
 
-    //  Shipping Charges (Free if subtotal > 999)
+    const gstAmount = Number((subtotal * 0.05).toFixed(2));
+    const shippingCharges = Number((subtotal > 999 ? 0 : 50).toFixed(2));
+    const totalAmount = Number((subtotal + gstAmount + shippingCharges).toFixed(2));
 
-    let shippingCharges = subtotal > 999 ? 0 : 50;
-
-    //  Final Total Amount
-
-    const totalAmount = subtotal + gstAmount + shippingCharges;
-
-    // Create Order
+    // Create Order 
 
     const order = await Order.create({
       userId,
       items: orderItems,
-      totalAmount,
+      subtotal,         //  Save subtotal
+      gstAmount,        // Save GST
+      shippingCharges,  // Save shipping charges
+      totalAmount,      //  Save final total
       shippingAddress,
       status: "pending",
       paymentStatus: "pending",
     });
 
     //  Clear cart after order placement
-    
     cart.items = [];
     await cart.save();
 
     return res.status(201).json({
       success: true,
       message: "Order placed successfully",
-      order: {
-        ...order.toObject(),
-        subtotal,
-        gstAmount,
-        shippingCharges,
-        totalAmount,
-      },
+      order,
     });
   } catch (error) {
     console.error("Create Order Error:", error);
