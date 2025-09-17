@@ -3,11 +3,24 @@ import mongoose from "mongoose";
 const orderItemSchema = new mongoose.Schema({
   productId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Product", 
+    ref: "Product",
     required: true,
   },
   quantity: { type: Number, required: true, min: 1 },
   price: { type: Number, required: true }, 
+});
+
+
+const shippingAddressSchema = new mongoose.Schema({
+  fullName: { type: String, required: true },        // Person's name
+  phone: { type: String, required: true },           // Contact number
+  addressLine1: { type: String, required: true },    // House/Flat/Building
+  addressLine2: { type: String },                    // Optional (Landmark, Apartment name)
+  city: { type: String, required: true },
+  state: { type: String, required: true },
+  postalCode: { type: String, required: true },      // Pincode
+  country: { type: String, default: "India" },       // Default country
+  nearbyLocation: { type: String },                  // Additional info for delivery person
 });
 
 const orderSchema = new mongoose.Schema(
@@ -19,7 +32,7 @@ const orderSchema = new mongoose.Schema(
     },
     items: [orderItemSchema],
     totalAmount: { type: Number, required: true },
-    shippingAddress: { type: String, required: true },
+    shippingAddress: { type: shippingAddressSchema, required: true },
     status: {
       type: String,
       enum: ["pending", "processing", "shipped", "delivered", "cancelled"],
@@ -35,5 +48,4 @@ const orderSchema = new mongoose.Schema(
 );
 
 
-
-export default orderSchema ;
+export default orderSchema;
