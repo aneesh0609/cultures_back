@@ -108,28 +108,28 @@ export const getOrders = async (req, res) => {
 };
 
 
-// export const getOrderById = async (req, res) => {
-//   const userId = req.user?.id;
-//   const { id } = req.params;
+export const getOrderById = async (req, res) => {
+  const userId = req.user?.id;
+  const { id } = req.params;
 
-//   try {
-//     const order = await Order.findOne({ _id: id, userId })
-//       .populate({
-//         path: "items.productId",
-//         model: Product,
-//         select: "name price",
-//       });
+  try {
+    const order = await Order.findOne({ _id: id, userId })
+      .populate({
+        path: "items.productId",
+        model: Product,
+        select: "name price",
+      });
 
-//     if (!order) {
-//       return res.status(404).json({ success: false, message: "Order not found" });
-//     }
+    if (!order) {
+      return res.status(404).json({ success: false, message: "Order not found" });
+    }
 
-//     return res.status(200).json({ success: true, order });
-//   } catch (error) {
-//     console.error("Get Order By ID Error:", error);
-//     res.status(500).json({ success: false, message: "Internal server error" });
-//   }
-// };
+    return res.status(200).json({ success: true, order });
+  } catch (error) {
+    console.error("Get Order By ID Error:", error);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
 
 
 // export const cancelOrder = async (req, res) => {
