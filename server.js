@@ -9,6 +9,7 @@ import productRoute from "./routes/productRoute.js";
 import userRoute from "./routes/userRoute.js";
 import cartRoute from "./routes/cartRoutes.js";
 import orderRoute from "./routes/orderRoutes.js";
+import paymentRouter from "./routes/paymentRoute.js";
 
 
 
@@ -36,6 +37,7 @@ app.use('/api/product' , productRoute);
 app.use('/api/user' , userRoute);
 app.use('/api/cart' , cartRoute);
 app.use('/api/order' , orderRoute);
+app.use('/api/payment' , paymentRouter);
 
 // Start server
 app.listen(PORT, () => {

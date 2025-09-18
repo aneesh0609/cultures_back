@@ -4,8 +4,9 @@ import userSchema from "./userSchema.js";
 import productSchema from "./productSchema.js";
 import cartSchema from "./cartSchema.js";
 import orderSchema from "./orderSchema.js";
+import paymentSchema from "./paymentSchema.js";
 
-let User , Product , Cart , Order;
+let User , Product , Cart , Order , Payment;
 
 const initModels = async () => {
   const db1 = await connectDb1(); // main mongoose connection
@@ -16,8 +17,9 @@ const initModels = async () => {
   Product = db1.model("Product", productSchema);
   Cart = db2.model('Cart' , cartSchema);
   Order = db2.model('Order' , orderSchema);
+  Payment = db2.model('Payment' , paymentSchema);
 
-  return { db1, db2, User , Product , Cart , Order};
+  return { db1, db2, User , Product , Cart , Order , Payment};
 };
 
-export { initModels, User , Product , Cart , Order};
+export { initModels, User , Product , Cart , Order , Payment};
