@@ -7,7 +7,7 @@ const productRoute = express.Router();
 
 
 productRoute.post('/create-product' , protect , adminOnly , createProduct) ;
-productRoute.get('/getAll-products' , protect , adminOnly , getAllProducts);
+productRoute.get('/getAll-products' ,  getAllProducts);
 productRoute.put('/update-products' , protect , adminOnly , updateProducts);
 productRoute.delete('/delete-products' , protect , adminOnly , deleteProduct);
 
