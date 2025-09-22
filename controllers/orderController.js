@@ -75,6 +75,12 @@ export const createOrder = async (req, res) => {
       success: true,
       message: "Order placed successfully",
       order,
+      summary: {
+    subtotal,
+    gstAmount,
+    shippingCharges,
+    totalAmount,
+  },
     });
   } catch (error) {
     console.error("Create Order Error:", error);

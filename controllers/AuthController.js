@@ -109,7 +109,16 @@ export const signin = async (req,res) => {
     });
 
 
-    res.json({success: true , message : "User Login Successfully" });
+        res.json({
+      success: true,
+      message: "User Login Successfully",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }
+    });
  
 
   } catch (error) {
