@@ -1,9 +1,6 @@
-
 import crypto from "crypto";
 import { Payment, Order } from "../config/bind.js"; // Models
 import razorpay from "../config/payment.js";
-import { generateInvoicePDF } from "../utils/generateInvoice.js";
-import { sendEmail } from "../utils/sendmail.js";
 
 /**
  * @desc Create Razorpay Order (SECURE)
@@ -19,9 +16,8 @@ export const createPaymentOrder = async (req, res) => {
       return res.status(400).json({ success: false, message: "Order ID is required" });
     }
 
-    // ✅ Fetch order securely
+    // Fetch order securely
     const order = await Order.findOne({ _id: orderId, userId });
-
     if (!order) {
       return res.status(404).json({ success: false, message: "Order not found or does not belong to this user" });
     }
@@ -30,19 +26,25 @@ export const createPaymentOrder = async (req, res) => {
       return res.status(400).json({ success: false, message: "Order already paid" });
     }
 
-    // ✅ Always recalculate total amount on backend (for security)
-    const totalAmount = order.items.reduce(
-      (acc, item) => acc + item.price * item.quantity,
-      0
-    );
+    // Recalculate subtotal
+    const subtotal = order.items.reduce((acc, item) => acc + item.price * item.quantity, 0);
 
-    if (totalAmount !== order.totalAmount) {
-      return res.status(400).json({ success: false, message: "Order amount mismatch. Cannot proceed." });
-    }
+    // Delivery charges logic
+    const deliveryCharges = subtotal > 999 ? 0 : 50;
 
-    // ✅ Create Razorpay order
+    // GST 5%
+    const gst = subtotal * 0.05;
+
+    // Total amount
+    const totalAmount = subtotal + gst + deliveryCharges;
+
+    // Update order totalAmount in DB (optional)
+    order.totalAmount = totalAmount;
+    await order.save();
+
+    // Create Razorpay order
     const options = {
-      amount: totalAmount * 100, // paise
+      amount: Math.round(totalAmount * 100), // paise
       currency: "INR",
       receipt: `receipt_${order._id}`,
       notes: { userId, orderId: order._id.toString() },
@@ -50,7 +52,7 @@ export const createPaymentOrder = async (req, res) => {
 
     const razorpayOrder = await razorpay.orders.create(options);
 
-    // ✅ Save payment in DB
+    // Save payment in DB
     const payment = await Payment.create({
       userId,
       orderId: order._id,
@@ -66,6 +68,7 @@ export const createPaymentOrder = async (req, res) => {
       razorpayOrder,
       key: process.env.RAZORPAY_KEY_ID,
       paymentId: payment._id,
+      totalAmount,
     });
 
   } catch (error) {
@@ -79,7 +82,6 @@ export const createPaymentOrder = async (req, res) => {
  * @route POST /api/payments/verify
  * @access Private (requires isAuthenticated middleware)
  */
-
 export const verifyPayment = async (req, res) => {
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
@@ -88,7 +90,7 @@ export const verifyPayment = async (req, res) => {
       return res.status(400).json({ success: false, message: "Missing payment details" });
     }
 
-    // ✅ Generate expected signature
+    // Generate expected signature
     const body = `${razorpay_order_id}|${razorpay_payment_id}`;
     const expectedSignature = crypto
       .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
@@ -99,44 +101,31 @@ export const verifyPayment = async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid signature, possible fraud detected" });
     }
 
-    // ✅ Find and update payment
+    // Find payment
     const payment = await Payment.findOne({ razorpayOrderId: razorpay_order_id });
     if (!payment) return res.status(404).json({ success: false, message: "Payment not found" });
     if (payment.status === "paid")
       return res.status(400).json({ success: false, message: "Payment already verified" });
 
+    // Update payment
     payment.razorpayPaymentId = razorpay_payment_id;
     payment.razorpaySignature = razorpay_signature;
     payment.status = "paid";
     await payment.save();
 
-    // ✅ Update order status
-    const order = await Order.findByIdAndUpdate(
-      payment.orderId,
-      { paymentStatus: "paid", status: "confirmed" },
-      { new: true }
-    ).populate("userId"); // so we can access user details for email
+    // Update order
+    const order = await Order.findById(payment.orderId);
+    if (!order) return res.status(404).json({ success: false, message: "Order not found" });
 
-    // ✅ Generate Invoice (PDF)
-    const invoicePath = await generateInvoicePDF({
-      order,
-      payment,
-      customer: order.userId,
-    });
-
-    // ✅ Send email with invoice attached
-    await sendEmail({
-      to: order.userId.email,
-      subject: "Your Order Invoice",
-      text: `Thank you for your order, ${order.userId.name}! Please find your invoice attached.`,
-      attachments: [{ filename: "invoice.pdf", path: invoicePath }],
-    });
+    order.paymentStatus = "paid";
+    order.status = "confirmed";
+    await order.save();
 
     return res.status(200).json({
       success: true,
-      message: "Payment verified, order confirmed, and invoice sent",
-      payment,
-      order,
+      message: "Payment verified and order confirmed",
+      paymentId: payment._id,
+      orderId: order._id,
     });
 
   } catch (error) {
@@ -187,9 +176,11 @@ export const getAllPayments = async (req, res) => {
   }
 };
 
-
-
-
+/**
+ * @desc Razorpay Webhook Handler
+ * @route POST /api/payments/webhook
+ * @access Public (Razorpay calls this endpoint)
+ */
 export const razorpayWebhook = async (req, res) => {
   try {
     const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
@@ -199,7 +190,7 @@ export const razorpayWebhook = async (req, res) => {
       return res.status(500).json({ success: false, message: "Server misconfiguration" });
     }
 
-    // ✅ Validate Webhook Signature
+    // Validate Webhook Signature
     const receivedSignature = req.headers["x-razorpay-signature"];
     const body = JSON.stringify(req.body);
 
@@ -222,7 +213,7 @@ export const razorpayWebhook = async (req, res) => {
 
     console.log(`✅ Webhook Event Received: ${event}`);
 
-    // ✅ Handle only successful payments
+    // Handle only successful payments
     if (event === "payment.captured") {
       const { order_id, id: paymentId } = payload;
 
@@ -244,7 +235,7 @@ export const razorpayWebhook = async (req, res) => {
       payment.razorpaySignature = "via_webhook";
       await payment.save();
 
-      // ✅ Mark order as confirmed
+      // Mark order as confirmed
       await Order.findByIdAndUpdate(payment.orderId, {
         paymentStatus: "paid",
         status: "confirmed",

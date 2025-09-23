@@ -98,7 +98,7 @@ export const getOrders = async (req, res) => {
       .populate({
         path: "items.productId",
         model: Product,
-        select: "name price",
+        select: "name price images",
       })
       .sort({ createdAt: -1 });
 
@@ -123,7 +123,7 @@ export const getOrderById = async (req, res) => {
       .populate({
         path: "items.productId",
         model: Product,
-        select: "name price",
+        select: "name price images",
       });
 
     if (!order) {

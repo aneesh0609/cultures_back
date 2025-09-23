@@ -69,7 +69,7 @@ app.use("/api/product", productRoute);
 app.use("/api/user", userRoute);
 app.use("/api/cart", cartRoute);
 app.use("/api/order", orderRoute);
-app.use("/api/payment", paymentRouter);
+app.use("/api/payments", paymentRouter);
 
 // -------- Error Handling --------
 app.use(notFoundHandler);
