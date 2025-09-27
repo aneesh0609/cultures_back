@@ -31,6 +31,14 @@ export const getAllUsers = async (req, res) => {
 };
 
 
+export const getCurrentUser = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id); // req.user set by protect middleware
+    res.json({ user });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to fetch user info" });
+  }
+};
 
 
 
