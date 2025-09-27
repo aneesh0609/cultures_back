@@ -46,9 +46,9 @@ export const getCurrentUser = async (req, res) => {
 export const updateUser = async (req, res) => {
   try {
     const userId = req.user._id;
-    const { password, oldPassword, ...updates } = req.body;
+    const { oldPassword, newPassword, ...updates } = req.body;
 
-
+    // Prevent role update
     if (updates.role) {
       return res.status(403).json({
         success: false,
@@ -56,16 +56,14 @@ export const updateUser = async (req, res) => {
       });
     }
 
-    // Fetch current user to verify old password if needed
-
+    // Fetch current user
     const currentUser = await User.findById(userId);
     if (!currentUser) {
       return res.status(404).json({ success: false, message: "User not found" });
     }
 
-    // If user wants to change password, verify old password first
-
-    if (password) {
+    // If changing password, verify old password
+    if (newPassword) {
       if (!oldPassword) {
         return res.status(400).json({ success: false, message: "Old password is required to set a new password" });
       }
@@ -77,21 +75,22 @@ export const updateUser = async (req, res) => {
 
       // Hash new password
       const salt = await bcrypt.genSalt(10);
-      updates.password = await bcrypt.hash(password, salt);
+      updates.password = await bcrypt.hash(newPassword, salt);
     }
 
-    //  Update user profile (name, email, etc.)
+    // Update user profile (name, email, etc.)
     const updatedUser = await User.findByIdAndUpdate(userId, updates, {
       new: true,
       runValidators: true,
-    }).select("-password"); 
-    return res.status(200).json({ success: true, updatedUser });
+    }).select("-password");
 
+    return res.status(200).json({ success: true, updatedUser });
   } catch (error) {
     console.error("Error updating user:", error);
     return res.status(500).json({ success: false, message: "Internal server error" });
   }
 };
+
 
 
 
