@@ -52,7 +52,9 @@ if (process.env.NODE_ENV === "development") {
 app.use(cookieParser());
 app.use(express.json({ limit: "10kb" }));
 app.use(cors({
-  origin: process.env.FRONTEND_URL || "http://localhost:3000",
+  origin: [ process.env.FRONTEND_URL ,
+  process.env.DASHBOARD_URL ]
+  || "http://localhost:3000",
   credentials: true
 }));
 

@@ -1,11 +1,11 @@
-import { Cart, Product, Order } from "../config/bind.js";
+import { Cart, Product, Order , User} from "../config/bind.js";
 
+// 🧾 USER: Create Order
 export const createOrder = async (req, res) => {
   const userId = req.user?.id;
   const { shippingAddress } = req.body;
 
   try {
-   
     if (
       !shippingAddress?.fullName ||
       !shippingAddress?.phone ||
@@ -21,8 +21,6 @@ export const createOrder = async (req, res) => {
       });
     }
 
-    //  Get user cart with product details
-
     const cart = await Cart.findOne({ userId }).populate({
       path: "items.productId",
       model: Product,
@@ -32,8 +30,6 @@ export const createOrder = async (req, res) => {
     if (!cart || cart.items.length === 0) {
       return res.status(400).json({ success: false, message: "Your cart is empty" });
     }
-
-    //  Calculate subtotal
 
     let subtotal = 0;
     const orderItems = cart.items.map((item) => {
@@ -47,27 +43,22 @@ export const createOrder = async (req, res) => {
 
     subtotal = Number(subtotal.toFixed(2));
 
-    //  GST & Shipping Calculation
-
     const gstAmount = Number((subtotal * 0.05).toFixed(2));
     const shippingCharges = Number((subtotal > 999 ? 0 : 50).toFixed(2));
     const totalAmount = Number((subtotal + gstAmount + shippingCharges).toFixed(2));
 
-    // Create Order 
-
     const order = await Order.create({
       userId,
       items: orderItems,
-      subtotal,         //  Save subtotal
-      gstAmount,        // Save GST
-      shippingCharges,  // Save shipping charges
-      totalAmount,      //  Save final total
+      subtotal,
+      gstAmount,
+      shippingCharges,
+      totalAmount,
       shippingAddress,
       status: "pending",
       paymentStatus: "pending",
     });
 
-    //  Clear cart after order placement
     cart.items = [];
     await cart.save();
 
@@ -75,12 +66,7 @@ export const createOrder = async (req, res) => {
       success: true,
       message: "Order placed successfully",
       order,
-      summary: {
-    subtotal,
-    gstAmount,
-    shippingCharges,
-    totalAmount,
-  },
+      summary: { subtotal, gstAmount, shippingCharges, totalAmount },
     });
   } catch (error) {
     console.error("Create Order Error:", error);
@@ -88,11 +74,9 @@ export const createOrder = async (req, res) => {
   }
 };
 
-
-
+// 🧾 USER: Get Orders
 export const getOrders = async (req, res) => {
   const userId = req.user?.id;
-
   try {
     const orders = await Order.find({ userId })
       .populate({
@@ -113,18 +97,17 @@ export const getOrders = async (req, res) => {
   }
 };
 
-
+// 🧾 USER: Get Order by ID
 export const getOrderById = async (req, res) => {
   const userId = req.user?.id;
   const { id } = req.params;
 
   try {
-    const order = await Order.findOne({ _id: id, userId })
-      .populate({
-        path: "items.productId",
-        model: Product,
-        select: "name price images",
-      });
+    const order = await Order.findOne({ _id: id, userId }).populate({
+      path: "items.productId",
+      model: Product,
+      select: "name price images",
+    });
 
     if (!order) {
       return res.status(404).json({ success: false, message: "Order not found" });
@@ -137,7 +120,7 @@ export const getOrderById = async (req, res) => {
   }
 };
 
-
+// 🧾 USER: Cancel Order
 export const cancelOrder = async (req, res) => {
   const userId = req.user?.id;
   const { id } = req.params;
@@ -158,9 +141,7 @@ export const cancelOrder = async (req, res) => {
 
     order.status = "cancelled";
 
-    // Optional: if paymentStatus === "paid", trigger refund logic here
     if (order.paymentStatus === "paid") {
-      // TODO: Call payment gateway API to initiate refund
       order.paymentStatus = "refunded";
     }
 
@@ -174,5 +155,74 @@ export const cancelOrder = async (req, res) => {
   } catch (error) {
     console.error("Cancel Order Error:", error);
     res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+
+
+export const getAllOrders = async (req, res) => {
+  try {
+    // ✅ Check if the user is admin
+    if (req.user.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Access denied. Admins only.",
+      });
+    }
+
+    // ✅ Fetch all orders with related data
+    const orders = await Order.find()
+      .populate({
+        path: "userId",
+        model: User,
+        select: "name email", // User info
+      })
+      .populate({
+        path: "items.productId",
+        model: Product,
+        select: "name price images", // Product info
+      })
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      count: orders.length,
+      orders,
+    });
+  } catch (error) {
+    console.error("Admin Get All Orders Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+
+// ✅ Get all orders for a specific user (even if stored in another DB)
+export const getUserOrders = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Check if user exists in main DB
+    const user = await User.findById(id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    // Fetch orders from the secondary DB
+    const orders = await Order.find({ userId: id }).sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      message: "User orders fetched successfully",
+      user: {
+        name: user.name,
+        email: user.email,
+      },
+      orders,
+    });
+  } catch (error) {
+    console.error("Error fetching user orders:", error);
+    res.status(500).json({ success: false, message: "Server error" });
   }
 };
