@@ -1,31 +1,58 @@
 import { Product } from "../config/bind.js";
+import cloudinary from "../config/cloudinary.js";
 
-
-
-export const createProduct = async (req,res) => {
- 
-     
-  const{name , description , price , category , stock , images } = req.body ;
-
+export const createProduct = async (req, res) => {
   try {
+    const { name, description, price, category, stock } = req.body;
+   
 
-     if(!name || !description || !price || !category || !stock || !images) {
-    return res.status(400).json({success: false , message: "All fields Required"});
-  }
-    
+    if (!name || !description || !price || !category || !stock) {
+      return res
+        .status(400)
+        .json({ success: false, message: "All fields are required" });
+    }
 
-    const product =  new Product({name,description,price,category,stock,images}) ;
+    // ✅ Handle Cloudinary Upload
+    const imageUrls = [];
 
-    await product.save() ;
-    
-    res.status(200).json({success: true , message : "Product Successfully Created"})
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        const result = await cloudinary.uploader.upload(file.path, {
+          folder: "cultures_products",
+        });
+        imageUrls.push(result.secure_url);
+      }
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: "At least one image is required",
+      });
+    }
 
+    const product = new Product({
+      name,
+      description,
+      price,
+      category,
+      stock,
+      images: imageUrls,
+    });
+
+    await product.save();
+
+    res.status(201).json({
+      success: true,
+      message: "Product created successfully",
+      product,
+    });
   } catch (error) {
-    
-    return res.status(500).json({success: false , message : "PR Internal Server Error"})
+    console.error("Create Product Error:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Internal Server Error", error });
   }
+};
 
-}
 
 
 export const getAllProducts = async (req,res) => 
@@ -43,24 +70,54 @@ export const getAllProducts = async (req,res) =>
 
 
 
-
 export const updateProducts = async (req, res) => {
-
   try {
-    const { productId, updates } = req.body;
+    const { productId } = req.body;
+    const { name, description, price, category, stock } = req.body;
 
-    if (!productId || !updates) {
-      return res.status(400).json({ success: false, message: "Product ID and updates are required" });
+    if (!productId) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Product ID is required" });
     }
 
-    const updatedProduct = await Product.findByIdAndUpdate(productId, updates, { new: true });
-
-    if (!updatedProduct) {
-      return res.status(404).json({ success: false, message: "Product not found" });
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Product not found" });
     }
 
-    return res.json({ success: true, updatedProduct });
+    // 🔸 If a new image is uploaded, remove old one from Cloudinary
+    if (req.file) {
+      if (product.images?.length > 0) {
+        const oldUrl = product.images[0];
+        // extract public_id safely
+        const parts = oldUrl.split("/");
+        const filename = parts[parts.length - 1].split(".")[0];
+        const folder = "cultures_app_uploads";
+        await cloudinary.uploader.destroy(`${folder}/${filename}`);
+      }
 
+      // new image already uploaded via multer-storage-cloudinary
+      const newImageUrl = req.file.path; // multer-storage-cloudinary stores URL in path
+      product.images = [newImageUrl];
+    }
+
+    // 🔸 Update other fields
+    if (name) product.name = name;
+    if (description) product.description = description;
+    if (price) product.price = price;
+    if (category) product.category = category;
+    if (stock) product.stock = stock;
+
+    const updatedProduct = await product.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Product updated successfully",
+      updatedProduct,
+    });
   } catch (error) {
     console.error("Update failed:", error);
     return res.status(500).json({ success: false, message: error.message });
@@ -84,28 +141,40 @@ export const getSingleProduct = async (req, res) => {
   }
 };
 
-export const deleteProduct  = async (req,res) => 
-{
-    const {productId} = req.body ;
+export const deleteProduct = async (req, res) => {
+  try {
+    const { productId } = req.body;
 
-   try {
+    if (!productId) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Product ID is required" });
+    }
 
-        if(!productId )
-        {
-          return res.status(400).json({success: false , message : "product id not received"})
-        }
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Product not found" });
+    }
 
-        const deletePr = await Product.findByIdAndDelete(productId);
+    // 🔸 Delete from Cloudinary
+    if (product.images?.length > 0) {
+      const oldUrl = product.images[0];
+      const parts = oldUrl.split("/");
+      const filename = parts[parts.length - 1].split(".")[0];
+      const folder = "cultures_app_uploads";
+      await cloudinary.uploader.destroy(`${folder}/${filename}`);
+    }
 
-        if(!deletePr)
-        {
-          return res.json({success: false , message : "product not found"}) ;
-        }
+    await Product.findByIdAndDelete(productId);
 
-        res.status(200).json({success: true , message: "product deleted successfully"});
-    
-   } catch (error) {
-    console.error("delete failed:", error);
+    return res.status(200).json({
+      success: true,
+      message: "Product and associated image deleted successfully",
+    });
+  } catch (error) {
+    console.error("Delete failed:", error);
     return res.status(500).json({ success: false, message: error.message });
-   }
-}
+  }
+};
