@@ -51,12 +51,15 @@ if (process.env.NODE_ENV === "development") {
 // -------- Core Middlewares --------
 app.use(cookieParser());
 app.use(express.json({ limit: "10kb" }));
-app.use(cors({
-  origin: [ process.env.FRONTEND_URL ,
-  process.env.DASHBOARD_URL ]
-  || "http://localhost:3000",
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: [
+      process.env.FRONTEND_URL || "http://localhost:5173",
+      process.env.DASHBOARD_URL || "http://localhost:5174",
+    ],
+    credentials: true,
+  })
+);
 
 // -------- Init DB + Models --------
 await initModels();
