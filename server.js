@@ -54,8 +54,10 @@ app.use(express.json({ limit: "10kb" }));
 app.use(
   cors({
     origin: [
-      process.env.FRONTEND_URL || "http://localhost:5173",
-      process.env.DASHBOARD_URL || "http://localhost:5174",
+      process.env.FRONTEND_URL,   // production frontend
+      process.env.DASHBOARD_URL,  // if you have one
+       process.env.DEV_DASHBOARD,
+       process.env.DEV_FRONTEND ,   // optional dashboard dev
     ],
     credentials: true,
   })
